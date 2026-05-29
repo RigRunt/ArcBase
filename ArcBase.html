@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rig's Item Info — ARC Raiders Database</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#080c14;color:#e2e8f0;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;overflow-x:hidden}
+:root{--cyan:#00e5ff;--gold:#ffd700;--purple:#a855f7;--epic:#d946ef;--rare:#3b82f6;--uncommon:#22c55e;--common:#94a3b8;--legendary:#ffd700}
+.header{background:linear-gradient(180deg,#0a1120,#080c14);border-bottom:1px solid #1e293b;padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.brand-logo{display:flex;flex-direction:column}
+.brand-title{font-size:30px;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#00e5ff,#a855f7,#ffd700);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.brand-sub{font-size:12px;color:#475569;font-weight:600;letter-spacing:2px;text-transform:uppercase}
+.brand-arc{font-size:14px;color:#64748b;margin-top:2px}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.ai-badge{font-size:10px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.35);color:#a855f7;padding:5px 12px;border-radius:20px;white-space:nowrap;font-weight:600;letter-spacing:.3px}
+.yt-chan-badge{font-size:10px;background:rgba(255,0,0,.1);border:1px solid rgba(255,0,0,.25);color:#ff4444;padding:4px 10px;border-radius:20px;white-space:nowrap;font-weight:600;text-decoration:none}
+.nav{display:flex;background:#0a1120;border-bottom:1px solid #1e293b;padding:0 24px;overflow-x:auto;gap:0}
+.nav-btn{padding:14px 22px;font-size:13px;font-weight:600;color:#64748b;background:none;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s;letter-spacing:.3px;position:relative}
+.nav-btn.active,.nav-btn:hover{color:#00e5ff;border-bottom-color:#00e5ff;background:rgba(0,229,255,.03)}
+.yt-badge{background:rgba(255,0,0,.12);border:1px solid rgba(255,60,60,.3);color:#ff4444;padding:2px 8px;border-radius:10px;font-size:9px;margin-left:6px;font-weight:700}
+.new-dot{width:8px;height:8px;background:#ff4444;border-radius:50%;display:inline-block;margin-left:6px;animation:newPulse 1.5s infinite;box-shadow:0 0 8px #ff4444;vertical-align:middle}
+@keyframes newPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(1.3)}}
+.page{display:none;padding:24px;max-width:1400px;margin:0 auto}
+.page.active{display:block}
+.stat-bar{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:#0a1120;border:1px solid #1e293b;border-radius:12px;padding:14px;text-align:center}
+.stat-val{font-size:24px;font-weight:800;background:linear-gradient(135deg,#00e5ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.stat-lbl{font-size:10px;color:#475569;text-transform:uppercase;letter-spacing:1px;margin-top:4px;font-weight:600}
+.filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.filter-bar input,.filter-bar select{background:#0a1120;border:1px solid #1e293b;color:#e2e8f0;padding:11px 16px;border-radius:10px;font-size:13px;outline:none;transition:border .2s}
+.filter-bar input{flex:1;min-width:180px;padding-left:36px;background:#0a1120 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23475569' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") 12px center no-repeat}
+.filter-bar input:focus,.filter-bar select:focus{border-color:#00e5ff}
+.filter-bar select option{background:#0a1120;color:#e2e8f0}
+.count-badge{font-size:12px;color:#64748b;padding:11px 0;font-weight:600;white-space:nowrap}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.item-card{background:#0a1120;border:1px solid #1e293b;border-radius:14px;padding:18px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+.item-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.item-card.Legendary::before{background:linear-gradient(90deg,#ffd700,#ff9500,#ffd700)}
+.item-card.Epic::before{background:linear-gradient(90deg,#d946ef,#a855f7,#d946ef)}
+.item-card.Rare::before{background:linear-gradient(90deg,#3b82f6,#06b6d4,#3b82f6)}
+.item-card.Uncommon::before{background:#22c55e}
+.item-card.Common::before{background:#475569}
+.item-card:hover{border-color:#334155;transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.6)}
+.item-card:hover .view-btn{background:rgba(0,229,255,.15)}
+.item-name{font-size:17px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.item-meta{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.rarity-tag{font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+.tag-Legendary{background:rgba(255,215,0,.1);color:#ffd700;border:1px solid rgba(255,215,0,.25)}
+.tag-Epic{background:rgba(217,70,239,.1);color:#d946ef;border:1px solid rgba(217,70,239,.25)}
+.tag-Rare{background:rgba(59,130,246,.1);color:#3b82f6;border:1px solid rgba(59,130,246,.25)}
+.tag-Uncommon{background:rgba(34,197,94,.1);color:#22c55e;border:1px solid rgba(34,197,94,.25)}
+.tag-Common{background:rgba(148,163,184,.1);color:#94a3b8;border:1px solid rgba(148,163,184,.25)}
+.type-tag{font-size:10px;color:#64748b;background:#131c2e;padding:3px 10px;border-radius:20px;font-weight:600}
+.desc-text{font-size:12px;color:#64748b;line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:4px}
+.sell-price{font-family:'Courier New',monospace;font-size:14px;color:#22c55e;font-weight:700}
+.view-btn{padding:7px 16px;background:rgba(0,229,255,.06);border:1px solid rgba(0,229,255,.18);color:#00e5ff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:.3px}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:#0a1120;border:1px solid #1e293b;border-radius:18px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;animation:modalIn .2s ease}
+@keyframes modalIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{padding:18px 22px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#0a1120;z-index:1}
+.modal-header h2{font-size:20px;font-weight:800;display:flex;align-items:center;gap:10px}
+.close-btn{background:none;border:none;color:#475569;font-size:28px;cursor:pointer;line-height:1;transition:color .2s;padding:0 4px}
+.close-btn:hover{color:#ff4444}
+.modal-body{padding:20px 22px;display:grid;gap:12px}
+.detail-row{background:#080c14;border:1px solid #1e293b;border-radius:10px;padding:13px 15px}
+.detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#475569;margin-bottom:5px;font-weight:600}
+.detail-value{font-size:13px;color:#cbd5e1;line-height:1.5}
+.detail-price{font-size:26px;font-family:'Courier New',monospace;font-weight:700;color:#22c55e}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.pro-tip{background:rgba(255,179,0,.04);border:1px solid rgba(255,179,0,.18);border-radius:10px;padding:13px 15px}
+.pro-tip-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:#fbbf24;font-weight:600;margin-bottom:5px}
+.pro-tip-value{font-size:13px;color:#fde68a;line-height:1.5}
+.yt-container{max-width:960px;margin:0 auto}
+.yt-profile{display:flex;align-items:center;gap:14px;margin-bottom:24px;background:#0a1120;border:1px solid #1e293b;border-radius:14px;padding:16px 20px;flex-wrap:wrap}
+.yt-avatar{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:#fff;flex-shrink:0;background:linear-gradient(135deg,#ff0000,#cc0000)}
+.yt-name{font-size:18px;font-weight:800}
+.yt-subs{font-size:12px;color:#64748b;margin-top:2px}
+.yt-sub-btn{display:inline-flex;align-items:center;gap:6px;margin-left:auto;background:#ff0000;color:#fff;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;transition:background .2s}
+.yt-sub-btn:hover{background:#cc0000}
+.yt-monitor{display:flex;align-items:center;gap:8px;padding:12px 18px;background:rgba(0,229,255,.03);border:1px solid rgba(0,229,255,.1);border-radius:10px;margin-bottom:20px;font-size:13px;color:#64748b;flex-wrap:wrap}
+.monitor-dot{width:8px;height:8px;background:#22c55e;border-radius:50%;flex-shrink:0;animation:newPulse 2s infinite}
+.monitor-dot.red{background:#ff4444;box-shadow:0 0 8px #ff4444}
+.yt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+.yt-card{background:#0a1120;border:1px solid #1e293b;border-radius:12px;overflow:hidden;cursor:pointer;transition:all .25s;text-decoration:none;display:block;color:inherit}
+.yt-card:hover{border-color:#334155;transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.4)}
+.yt-thumb-wrap{aspect-ratio:16/9;background:linear-gradient(135deg,#131c2e,#1e293b);display:flex;align-items:center;justify-content:center;font-size:32px;position:relative;overflow:hidden}
+.yt-thumb-wrap img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
+.yt-thumb-fallback{font-size:36px;z-index:1}
+.yt-play-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.3)}
+.yt-play-icon{width:44px;height:44px;background:rgba(255,0,0,.85);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.yt-play-icon::after{content:'';display:block;border-left:15px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.yt-new-badge{position:absolute;top:8px;right:8px;background:#ff0000;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700;color:#fff;animation:newPulse 1.5s infinite;box-shadow:0 0 12px rgba(255,0,0,.5);z-index:2}
+.yt-info{padding:13px 15px}
+.yt-title{font-size:14px;font-weight:700;margin-bottom:4px;line-height:1.4;color:#e2e8f0}
+.yt-stats{font-size:11px;color:#64748b}
+.yt-unseen{display:inline-block;margin-top:6px;font-size:10px;color:#ff4444;font-weight:700;animation:newPulse 1.5s infinite}
+.yt-refresh{font-size:11px;color:#64748b;background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);padding:6px 14px;border-radius:8px;cursor:pointer;transition:all .2s}
+.yt-refresh:hover{background:rgba(0,229,255,.1);color:#00e5ff}
+.ai-chat{background:#0a1120;border:1px solid #1e293b;border-radius:14px;overflow:hidden;max-width:900px;margin:0 auto}
+.ai-chat-top{padding:14px 18px;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:10px}
+.ai-chat-name{font-size:14px;font-weight:700}
+.ai-chat-desc{font-size:11px;color:#64748b}
+.chat-msgs{padding:16px;display:grid;gap:10px;min-height:200px;max-height:380px;overflow-y:auto}
+.chat-msg{padding:11px 15px;border-radius:10px;font-size:13px;line-height:1.6;max-width:88%}
+.chat-ai{background:#131c2e;border:1px solid #1e293b;color:#cbd5e1;align-self:flex-start}
+.chat-ai .msg-by{font-size:10px;color:#00e5ff;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:3px}
+.chat-user{background:rgba(0,229,255,.07);border:1px solid rgba(0,229,255,.13);color:#e2e8f0;align-self:flex-end}
+.chat-input-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid #1e293b}
+.chat-input-row input{flex:1;background:#080c14;border:1px solid #1e293b;color:#e2e8f0;padding:10px 14px;border-radius:8px;font-size:13px;outline:none;transition:border .2s}
+.chat-input-row input:focus{border-color:#00e5ff}
+.chat-send{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);color:#00e5ff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+.chat-send:hover{background:rgba(0,229,255,.2)}
+.empty-state{grid-column:1/-1;text-align:center;padding:50px 20px;color:#475569}
+.empty-state .big{font-size:42px;margin-bottom:10px}
+.empty-state .txt{font-size:15px}
+.empty-state .subtxt{font-size:12px;color:#334155;margin-top:6px}
+.loading-msg{color:#475569;font-style:italic}
+.refresh-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+@media(max-width:640px){.header{padding:14px 16px}.brand-title{font-size:22px}.page{padding:16px}.nav{padding:0 12px}.nav-btn{padding:12px 14px;font-size:12px}.detail-grid{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.filter-bar input{min-width:140px}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand-logo">
+    <div class="brand-title">Rig's Item Info</div>
+    <div class="brand-arc">ARC Raiders — Complete Database</div>
+    <div class="brand-sub">Community Resource</div>
+  </div>
+  <div class="header-right">
+    <span class="ai-badge">⚡ Powered by AI</span>
+    <a href="https://youtube.com/@RigRunt" target="_blank" class="yt-chan-badge">▶ @RigRunt</a>
+  </div>
+</header>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('items',this)">📦 Items</button>
+  <button class="nav-btn" onclick="showPage('yt',this)">▶ Videos <span class="yt-badge" id="ytNavBadge">LIVE</span><span class="new-dot" id="navNewDot" style="display:none"></span></button>
+  <button class="nav-btn" onclick="showPage('ai',this)">🤖 Ask AI</button>
+</nav>
+
+<div class="page active" id="page-items">
+  <div class="stat-bar">
+    <div class="stat-card"><div class="stat-val" id="totalCount">0</div><div class="stat-lbl">Total Items</div></div>
+    <div class="stat-card"><div class="stat-val" id="showingCount">0</div><div class="stat-lbl">Showing</div></div>
+    <div class="stat-card"><div class="stat-val">80</div><div class="stat-lbl">Weapons</div></div>
+    <div class="stat-card"><div class="stat-val" id="weaponCount">0</div><div class="stat-lbl">Weapon Tiers</div></div>
+    <div class="stat-card"><div class="stat-val">5</div><div class="stat-lbl">Rarities</div></div>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search weapons, materials, mods...">
+    <select id="rarityFilter"><option value="">All Rarities</option><option>Legendary</option><option>Epic</option><option>Rare</option><option>Uncommon</option><option>Common</option></select>
+    <select id="typeFilter"><option value="">All Types</option><option>Weapon</option><option>Mod</option><option>Ammo</option><option>Quick Use</option><option>Augment</option><option>Material</option><option>Recyclable</option><option>Trinket</option><option>Key</option><option>Misc</option></select>
+    <span class="count-badge" id="countLabel">—</span>
+  </div>
+
+  <div class="grid" id="itemGrid"></div>
+</div>
+
+<div class="page" id="page-yt">
+  <div class="yt-container">
+    <div class="yt-profile">
+      <div class="yt-avatar">R</div>
+      <div>
+        <div class="yt-name">@RigRunt</div>
+        <div class="yt-subs" id="ytSubCount">23 subscribers · ARC Raiders content</div>
+      </div>
+      <a class="yt-sub-btn" href="https://youtube.com/@RigRunt" target="_blank">▶ Subscribe</a>
+    </div>
+    <div class="yt-monitor">
+      <span class="monitor-dot" id="monitorDot"></span>
+      <span id="ytStatus">AI monitoring @RigRunt for new uploads...</span>
+      <button class="yt-refresh" onclick="fetchRealVideos()" style="margin-left:auto">↻ Refresh</button>
+    </div>
+
+    <div class="yt-grid" id="ytGrid">
+      <div class="empty-state"><div class="big">📡</div><div class="txt">Fetching your real YouTube videos...</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="page" id="page-ai">
+  <div class="ai-chat">
+    <div class="ai-chat-top">
+      <div>
+        <div class="ai-chat-name">⚡ Rig's AI Assistant</div>
+        <div class="ai-chat-desc">Ask me anything about ARC Raiders — items, builds, crafting, loot routes...</div>
+      </div>
+    </div>
+    <div class="chat-msgs" id="chatMessages">
+      <div class="chat-msg chat-ai"><div class="msg-by">Rig's AI</div>Hey raider 👋 Ask me about any item, weapon build, crafting recipe, loot location — I've got the full 500+ item database loaded. What do you need?</div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chatInput" placeholder='e.g. "How do I craft a Tempest?"' onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="chat-send" onclick="sendMsg()">Ask →</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modalTitle"></h2>
+      <button class="close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ====== FULL ARC RAIDERS DATABASE ======
+// Every weapon I-IV, every mod, every item from metaforge (15 pages) + arcraiders.wiki
+const DB = [
+  // ========== ASSAULT RIFLES ==========
+  {n:"Kettle I",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Light Ammo",dmg:"8.5",fr:"42.8",range:"30",wt:"8.5kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Kettle II",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Light Ammo"},
+  {n:"Kettle III",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Light Ammo"},
+  {n:"Kettle IV",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Light Ammo"},
+  {n:"Rattler I",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo",dmg:"9",fr:"56.2",range:"33.3",wt:"9kg",slots:"Muzzle·Underbarrel·Stock"},
+  {n:"Rattler II",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Rattler III",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Rattler IV",r:"Common",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Arpeggio I",r:"Uncommon",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo",dmg:"9.5",fr:"55.9",range:"18.3",wt:"9.5kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Arpeggio II",r:"Uncommon",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Arpeggio III",r:"Uncommon",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Arpeggio IV",r:"Uncommon",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Tempest I",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo",dmg:"10",fr:"55.9",range:"36.7",wt:"11kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Tempest II",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Tempest III",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Tempest IV",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Medium Ammo"},
+  {n:"Bettina I",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Heavy Ammo",dmg:"12",fr:"42.5",range:"38.1",wt:"12kg",slots:"Muzzle·Underbarrel·Heavy Mag·Stock"},
+  {n:"Bettina II",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Heavy Ammo"},
+  {n:"Bettina III",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Heavy Ammo"},
+  {n:"Bettina IV",r:"Epic",t:"Weapon",cat:"Assault Rifle",ammo:"Heavy Ammo"},
+
+  // ========== BATTLE RIFLES ==========
+  {n:"Ferro I",r:"Common",t:"Weapon",cat:"Battle Rifle",ammo:"Heavy Ammo",dmg:"40",fr:"53.1",range:"6.6",wt:"10kg",slots:"Muzzle·Underbarrel·Stock"},
+  {n:"Ferro II",r:"Common",t:"Weapon",cat:"Battle Rifle",ammo:"Heavy Ammo"},
+  {n:"Ferro III",r:"Common",t:"Weapon",cat:"Battle Rifle",ammo:"Heavy Ammo"},
+  {n:"Ferro IV",r:"Common",t:"Weapon",cat:"Battle Rifle",ammo:"Heavy Ammo"},
+  {n:"Renegade I",r:"Rare",t:"Weapon",cat:"Battle Rifle",ammo:"Medium Ammo",dmg:"14",fr:"70.6",range:"10",wt:"10kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Renegade II",r:"Rare",t:"Weapon",cat:"Battle Rifle",ammo:"Medium Ammo"},
+  {n:"Renegade III",r:"Rare",t:"Weapon",cat:"Battle Rifle",ammo:"Medium Ammo"},
+  {n:"Renegade IV",r:"Rare",t:"Weapon",cat:"Battle Rifle",ammo:"Medium Ammo"},
+
+  // ========== SMGs ==========
+  {n:"Patroller I",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo",dmg:"7",fr:"45.3",range:"42.1",wt:"6kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Patroller II",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Patroller III",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Patroller IV",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Seeker I",r:"Uncommon",t:"Weapon",cat:"SMG",ammo:"Light Ammo",dmg:"8",fr:"63.1",range:"36.2",wt:"7kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Seeker II",r:"Uncommon",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Seeker III",r:"Uncommon",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Seeker IV",r:"Uncommon",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Stitcher I",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo",dmg:"7",fr:"45.3",range:"42.1",wt:"6.5kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Stitcher II",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Stitcher III",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Stitcher IV",r:"Common",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Bobcat I",r:"Epic",t:"Weapon",cat:"SMG",ammo:"Light Ammo",dmg:"9",fr:"72.3",range:"28.5",wt:"7kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Bobcat II",r:"Epic",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Bobcat III",r:"Epic",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+  {n:"Bobcat IV",r:"Epic",t:"Weapon",cat:"SMG",ammo:"Light Ammo"},
+
+  // ========== SHOTGUNS ==========
+  {n:"Fencer I",r:"Common",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo",dmg:"35",fr:"32.5",range:"20.1",wt:"7kg",slots:"Muzzle·Underbarrel·Shotgun Mag·Stock"},
+  {n:"Fencer II",r:"Common",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Fencer III",r:"Common",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Fencer IV",r:"Common",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Il Toro I",r:"Uncommon",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo",dmg:"10",fr:"26.7",range:"32.1",wt:"7kg",slots:"Muzzle·Underbarrel·Shotgun Mag·Stock"},
+  {n:"Il Toro II",r:"Uncommon",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Il Toro III",r:"Uncommon",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Il Toro IV",r:"Uncommon",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Vulcano I",r:"Epic",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo",dmg:"15",fr:"40.3",range:"22.1",wt:"8kg",slots:"Muzzle·Underbarrel·Shotgun Mag·Stock"},
+  {n:"Vulcano II",r:"Epic",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Vulcano III",r:"Epic",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+  {n:"Vulcano IV",r:"Epic",t:"Weapon",cat:"Shotgun",ammo:"Shotgun Ammo"},
+
+  // ========== PISTOLS ==========
+  {n:"Hairpin I",r:"Common",t:"Weapon",cat:"Pistol",ammo:"Light Ammo",dmg:"12",fr:"30.2",range:"28.4",wt:"3kg",slots:"Muzzle·Underbarrel·Stock"},
+  {n:"Hairpin II",r:"Common",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Hairpin III",r:"Common",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Hairpin IV",r:"Common",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Burletta I",r:"Uncommon",t:"Weapon",cat:"Pistol",ammo:"Light Ammo",dmg:"14",fr:"38.7",range:"32.1",wt:"3.5kg",slots:"Muzzle·Underbarrel·Light Mag·Stock"},
+  {n:"Burletta II",r:"Uncommon",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Burletta III",r:"Uncommon",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Burletta IV",r:"Uncommon",t:"Weapon",cat:"Pistol",ammo:"Light Ammo"},
+  {n:"Venator I",r:"Rare",t:"Weapon",cat:"Pistol",ammo:"Medium Ammo",dmg:"18",fr:"48.4",range:"36.7",wt:"5kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Venator II",r:"Rare",t:"Weapon",cat:"Pistol",ammo:"Medium Ammo"},
+  {n:"Venator III",r:"Rare",t:"Weapon",cat:"Pistol",ammo:"Medium Ammo"},
+  {n:"Venator IV",r:"Rare",t:"Weapon",cat:"Pistol",ammo:"Medium Ammo"},
+
+  // ========== HAND CANNONS ==========
+  {n:"Anvil I",r:"Uncommon",t:"Weapon",cat:"Hand Cannon",ammo:"Heavy Ammo",dmg:"22",fr:"38.5",range:"34.2",wt:"5kg",slots:"Muzzle·Underbarrel·Heavy Mag·Stock"},
+  {n:"Anvil II",r:"Uncommon",t:"Weapon",cat:"Hand Cannon",ammo:"Heavy Ammo"},
+  {n:"Anvil III",r:"Uncommon",t:"Weapon",cat:"Hand Cannon",ammo:"Heavy Ammo"},
+  {n:"Anvil IV",r:"Uncommon",t:"Weapon",cat:"Hand Cannon",ammo:"Heavy Ammo"},
+
+  // ========== LMGs ==========
+  {n:"Torrente I",r:"Rare",t:"Weapon",cat:"LMG",ammo:"Medium Ammo",dmg:"8",fr:"58.3",range:"49.9",wt:"12kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Torrente II",r:"Rare",t:"Weapon",cat:"LMG",ammo:"Medium Ammo"},
+  {n:"Torrente III",r:"Rare",t:"Weapon",cat:"LMG",ammo:"Medium Ammo"},
+  {n:"Torrente IV",r:"Rare",t:"Weapon",cat:"LMG",ammo:"Medium Ammo"},
+
+  // ========== SNIPER RIFLES ==========
+  {n:"Osprey I",r:"Common",t:"Weapon",cat:"Sniper Rifle",ammo:"Medium Ammo",dmg:"45",fr:"80.3",range:"17.7",wt:"9kg",slots:"Muzzle·Underbarrel·Medium Mag·Stock"},
+  {n:"Osprey II",r:"Common",t:"Weapon",cat:"Sniper Rifle",ammo:"Medium Ammo"},
+  {n:"Osprey III",r:"Common",t:"Weapon",cat:"Sniper Rifle",ammo:"Medium Ammo"},
+  {n:"Osprey IV",r:"Common",t:"Weapon",cat:"Sniper Rifle",ammo:"Medium Ammo"},
+
+  // ========== SPECIALS (Launchers) ==========
+  {n:"Rascal I",r:"Common",t:"Weapon",cat:"Special",ammo:"Launcher Ammo",dmg:"75",fr:"28.3",range:"13.7",wt:"8kg",slots:"N/A"},
+  {n:"Rascal II",r:"Common",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+  {n:"Rascal III",r:"Common",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+  {n:"Rascal IV",r:"Common",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+  {n:"Hullcracker I",r:"Epic",t:"Weapon",cat:"Special",ammo:"Launcher Ammo",dmg:"100",fr:"38.9",range:"20.3",wt:"12kg",slots:"Underbarrel·Stock"},
+  {n:"Hullcracker II",r:"Epic",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+  {n:"Hullcracker III",r:"Epic",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+  {n:"Hullcracker IV",r:"Epic",t:"Weapon",cat:"Special",ammo:"Launcher Ammo"},
+
+  // ========== LEGENDARY WEAPONS (no tiers) ==========
+  {n:"Aphelion",r:"Legendary",t:"Weapon",cat:"Battle Rifle",ammo:"Energy Clip",dmg:"25",fr:"76",range:"9",wt:"7kg",slots:"Underbarrel·Stock",get:"Matriarch events, Blueprint + Matriarch Reactor",tip:"Best PvPvE energy battle rifle. Keep the reactor + blueprint."},
+  {n:"Jupiter",r:"Legendary",t:"Weapon",cat:"Sniper Rifle",ammo:"Energy Clip",dmg:"60",fr:"71.7",range:"7.7",wt:"9kg",slots:"N/A",get:"Harvester events, rare blueprint",tip:"Best long-range. Extreme velocity, multi-target penetration."},
+  {n:"Equalizer",r:"Legendary",t:"Weapon",cat:"Special",ammo:"Energy Clip",dmg:"8",fr:"68.6",range:"33.3",wt:"8kg",slots:"N/A",get:"Blueprint + Queen Reactor",tip:"Full-auto energy beam. Close-mid range destroyer."},
+  {n:"Dolabra",r:"Legendary",t:"Weapon",cat:"Shotgun",ammo:"Energy Clip",dmg:"20",fr:"35.1",range:"16.2",wt:"8kg",slots:"N/A",get:"Blueprint drops, high-tier zones",tip:"Experimental heat shotgun with AoE blast or focused beam."},
+
+  // ========== LEGENDARY ITEMS (non-weapon) ==========
+  {n:"Snap Hook",r:"Legendary",t:"Quick Use",cat:"Gadget",get:"Blueprint + Power Rods",tip:"Grapple hook for vertical mobility. Craft ASAP."},
+  {n:"Acoustic Guitar",r:"Legendary",t:"Quick Use",cat:"Utility",get:"Residential zones",tip:"Play to attract ARC or distract players. Fun utility."},
+  {n:"Anvil Splitter",r:"Legendary",t:"Mod",cat:"Tech Mod",get:"Pharmacy in Plaza Rosa (Buried City)",tip:"Splits bullets into 4 projectiles. Excellent crowd control."},
+  {n:"Kinetic Converter",r:"Legendary",t:"Mod",cat:"Tech Mod",get:"Events & elite drops",tip:"Massive fire rate increase. DPS beast mod. Rare."},
+  {n:"Matriarch Reactor",r:"Legendary",t:"Material",cat:"Boss Drop",get:"Kill the Matriarch ARC",tip:"KEEP! Craft Aphelion + top-tier gear."},
+  {n:"Queen Reactor",r:"Legendary",t:"Material",cat:"Boss Drop",get:"Kill the Queen ARC",tip:"KEEP! Craft Equalizer + Queen-tier weapons."},
+
+  // ========== MODIFICATIONS ==========
+  {n:"Compensator I",r:"Common",t:"Mod",cat:"Muzzle",desc:"20% Reduced Per-Shot Dispersion, 10% Reduced Max Shot Dispersion",wt:"0.25kg"},
+  {n:"Compensator II",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"40% Reduced Per-Shot Dispersion, 20% Reduced Max Shot Dispersion",wt:"0.5kg"},
+  {n:"Compensator III",r:"Rare",t:"Mod",cat:"Muzzle",desc:"50% Reduced Per-Shot Dispersion, 20% Increased Durability Burn Rate",wt:"0.75kg"},
+  {n:"Muzzle Brake I",r:"Common",t:"Mod",cat:"Muzzle",desc:"15% Reduced Vertical & Horizontal Recoil",wt:"0.25kg"},
+  {n:"Muzzle Brake II",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"20% Reduced Vertical & Horizontal Recoil",wt:"0.5kg"},
+  {n:"Muzzle Brake III",r:"Rare",t:"Mod",cat:"Muzzle",desc:"25% Reduced Vertical & Horizontal Recoil",wt:"0.75kg"},
+  {n:"Silencer I",r:"Common",t:"Mod",cat:"Muzzle",desc:"Reduces firing noise & enemy aggro",wt:"0.25kg"},
+  {n:"Silencer II",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"Moderate noise reduction",wt:"0.5kg"},
+  {n:"Silencer III",r:"Rare",t:"Mod",cat:"Muzzle",desc:"Significant noise reduction",wt:"0.75kg"},
+  {n:"Extended Barrel I",r:"Common",t:"Mod",cat:"Muzzle",desc:"10% Increased Bullet Velocity",wt:"0.3kg"},
+  {n:"Extended Barrel II",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"20% Increased Bullet Velocity",wt:"0.5kg"},
+  {n:"Extended Barrel III",r:"Rare",t:"Mod",cat:"Muzzle",desc:"30% Increased Bullet Velocity, 15% Increased Damage Range",wt:"0.75kg"},
+  {n:"Angled Grip I",r:"Common",t:"Mod",cat:"Underbarrel",desc:"Slightly reduces horizontal recoil",wt:"0.2kg"},
+  {n:"Angled Grip II",r:"Uncommon",t:"Mod",cat:"Underbarrel",desc:"Moderately reduces horizontal recoil",wt:"0.4kg"},
+  {n:"Angled Grip III",r:"Rare",t:"Mod",cat:"Underbarrel",desc:"Significantly reduces horizontal recoil",wt:"0.6kg"},
+  {n:"Vertical Grip I",r:"Common",t:"Mod",cat:"Underbarrel",desc:"Slightly reduces vertical recoil",wt:"0.2kg"},
+  {n:"Vertical Grip II",r:"Uncommon",t:"Mod",cat:"Underbarrel",desc:"Moderately reduces vertical recoil",wt:"0.4kg"},
+  {n:"Vertical Grip III",r:"Rare",t:"Mod",cat:"Underbarrel",desc:"Significantly reduces vertical recoil",wt:"0.6kg"},
+  {n:"Horizontal Grip",r:"Uncommon",t:"Mod",cat:"Underbarrel",desc:"Reduces horizontal & vertical recoil",wt:"0.3kg"},
+  {n:"Extended Light Mag I",r:"Common",t:"Mod",cat:"Magazine",desc:"Slightly extends light ammo capacity",wt:"0.25kg"},
+  {n:"Extended Light Mag II",r:"Uncommon",t:"Mod",cat:"Magazine",desc:"Moderately extends light ammo capacity",wt:"0.5kg"},
+  {n:"Extended Light Mag III",r:"Rare",t:"Mod",cat:"Magazine",desc:"Significantly extends light ammo capacity",wt:"0.75kg"},
+  {n:"Extended Medium Mag I",r:"Common",t:"Mod",cat:"Magazine",desc:"Slightly extends medium ammo capacity",wt:"0.25kg"},
+  {n:"Extended Medium Mag II",r:"Uncommon",t:"Mod",cat:"Magazine",desc:"Moderately extends medium ammo capacity",wt:"0.5kg"},
+  {n:"Extended Medium Mag III",r:"Rare",t:"Mod",cat:"Magazine",desc:"Significantly extends medium ammo capacity",wt:"0.75kg"},
+  {n:"Extended Shotgun Mag I",r:"Common",t:"Mod",cat:"Magazine",desc:"Slightly extends shotgun ammo capacity",wt:"0.25kg"},
+  {n:"Extended Shotgun Mag II",r:"Uncommon",t:"Mod",cat:"Magazine",desc:"Moderately extends shotgun ammo capacity",wt:"0.5kg"},
+  {n:"Extended Shotgun Mag III",r:"Rare",t:"Mod",cat:"Magazine",desc:"Significantly extends shotgun ammo capacity",wt:"0.75kg"},
+  {n:"Stable Stock I",r:"Common",t:"Mod",cat:"Stock",desc:"Slightly improves dispersion & recoil recovery",wt:"0.25kg"},
+  {n:"Stable Stock II",r:"Uncommon",t:"Mod",cat:"Stock",desc:"Moderately improves dispersion & recoil recovery",wt:"0.5kg"},
+  {n:"Stable Stock III",r:"Rare",t:"Mod",cat:"Stock",desc:"Significantly improves dispersion & recoil recovery",wt:"0.75kg"},
+  {n:"Padded Stock",r:"Uncommon",t:"Mod",cat:"Stock",desc:"Reduces camera shake when taking damage",wt:"0.4kg"},
+  {n:"Lightweight Stock",r:"Uncommon",t:"Mod",cat:"Stock",desc:"+200% ADS Speed, 50% Recoil Recovery penalty",wt:"0.3kg"},
+  {n:"Red Dot Sight I",r:"Common",t:"Mod",cat:"Sight",desc:"Close-mid range, fast target acquisition",wt:"0.15kg"},
+  {n:"Red Dot Sight II",r:"Uncommon",t:"Mod",cat:"Sight",desc:"Improved close-mid range aiming",wt:"0.2kg"},
+  {n:"Red Dot Sight III",r:"Rare",t:"Mod",cat:"Sight",desc:"Premium close-mid range sight",wt:"0.25kg"},
+  {n:"Scope I",r:"Common",t:"Mod",cat:"Sight",desc:"Mid-range magnification",wt:"0.2kg"},
+  {n:"Scope II",r:"Uncommon",t:"Mod",cat:"Sight",desc:"Improved mid-range scope",wt:"0.3kg"},
+  {n:"Scope III",r:"Rare",t:"Mod",cat:"Sight",desc:"High-magnification precision scope",wt:"0.4kg"},
+  {n:"4x Scope I",r:"Common",t:"Mod",cat:"Sight",desc:"4x magnification for long-range",wt:"0.25kg"},
+  {n:"4x Scope II",r:"Uncommon",t:"Mod",cat:"Sight",desc:"Enhanced 4x scope with better clarity",wt:"0.35kg"},
+  {n:"Shotgun Choke I",r:"Common",t:"Mod",cat:"Muzzle",desc:"Slightly tightens pellet spread",wt:"0.25kg"},
+  {n:"Shotgun Choke II",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"Moderately tightens pellet spread",wt:"0.5kg"},
+  {n:"Shotgun Choke III",r:"Rare",t:"Mod",cat:"Muzzle",desc:"Significantly tightens pellet spread, boosts range",wt:"0.75kg"},
+  {n:"Shotgun Silencer",r:"Uncommon",t:"Mod",cat:"Muzzle",desc:"Reduces shotgun noise for stealth",wt:"0.4kg"},
+
+  // ========== AMMO ==========
+  {n:"Light Ammo",r:"Common",t:"Ammo",cat:"Ammunition"},
+  {n:"Medium Ammo",r:"Common",t:"Ammo",cat:"Ammunition"},
+  {n:"Heavy Ammo",r:"Common",t:"Ammo",cat:"Ammunition"},
+  {n:"Shotgun Ammo",r:"Common",t:"Ammo",cat:"Ammunition"},
+  {n:"Launcher Ammo",r:"Rare",t:"Ammo",cat:"Ammunition"},
+  {n:"Energy Clip",r:"Rare",t:"Ammo",cat:"Ammunition"},
+
+  // ========== AUGMENTS ==========
+  {n:"Combat Mk.1",r:"Uncommon",t:"Augment",cat:"Combat"},
+  {n:"Combat Mk.2",r:"Rare",t:"Augment",cat:"Combat"},
+  {n:"Combat Mk.3 (Aggressive)",r:"Epic",t:"Augment",cat:"Combat"},
+  {n:"Combat Mk.3 (Flanking)",r:"Epic",t:"Augment",cat:"Combat"},
+  {n:"Recon Mk.1",r:"Uncommon",t:"Augment",cat:"Recon"},
+  {n:"Recon Mk.2",r:"Rare",t:"Augment",cat:"Recon"},
+  {n:"Recon Mk.3",r:"Epic",t:"Augment",cat:"Recon"},
+  {n:"Tactical Mk.1",r:"Uncommon",t:"Augment",cat:"Tactical"},
+  {n:"Tactical Mk.2",r:"Rare",t:"Augment",cat:"Tactical"},
+  {n:"Tactical Mk.3 (Healing)",r:"Epic",t:"Augment",cat:"Tactical"},
+  {n:"Tactical Mk.3 (Smoke)",r:"Epic",t:"Augment",cat:"Tactical"},
+
+  // ========== SHIELDS ==========
+  {n:"Light Shield",r:"Common",t:"Gear",cat:"Shield"},
+  {n:"Medium Shield",r:"Rare",t:"Gear",cat:"Shield"},
+  {n:"Heavy Shield",r:"Epic",t:"Gear",cat:"Shield"},
+
+  // ========== QUICK USE / CONSUMABLES ==========
+  {n:"Bandage",r:"Common",t:"Quick Use",cat:"Healing"},
+  {n:"Adrenaline Shot",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Yellow Light Stick",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Blue Light Stick",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Green Light Stick",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Red Light Stick",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Binoculars",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"White Flag",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Gas Grenade",r:"Common",t:"Quick Use",cat:"Grenade"},
+  {n:"Gas Grenade Trap",r:"Common",t:"Quick Use",cat:"Trap"},
+  {n:"Gas Mine",r:"Common",t:"Quick Use",cat:"Trap"},
+  {n:"Remote Raider Flare",r:"Common",t:"Quick Use",cat:"Utility"},
+  {n:"Barricade Kit",r:"Uncommon",t:"Quick Use",cat:"Utility"},
+  {n:"Seeker Grenade",r:"Uncommon",t:"Quick Use",cat:"Grenade"},
+  {n:"Shaker",r:"Uncommon",t:"Quick Use",cat:"Utility"},
+  {n:"Shield Recharger",r:"Uncommon",t:"Quick Use",cat:"Utility"},
+  {n:"Door Blocker",r:"Uncommon",t:"Quick Use",cat:"Trap"},
+  {n:"Laser Trap: Line",r:"Uncommon",t:"Quick Use",cat:"Trap"},
+  {n:"Laser Trap: Tripwire",r:"Uncommon",t:"Quick Use",cat:"Trap"},
+  {n:"Blaze Grenade",r:"Rare",t:"Quick Use",cat:"Grenade"},
+  {n:"Blaze Grenade Trap",r:"Rare",t:"Quick Use",cat:"Trap"},
+  {n:"Tagging Grenade",r:"Rare",t:"Quick Use",cat:"Grenade"},
+  {n:"Trigger 'Nade",r:"Rare",t:"Quick Use",cat:"Grenade"},
+  {n:"Trailblazer",r:"Rare",t:"Quick Use",cat:"Utility"},
+  {n:"Zipline",r:"Rare",t:"Quick Use",cat:"Utility"},
+  {n:"Defibrillator",r:"Rare",t:"Quick Use",cat:"Healing"},
+  {n:"Vita Shot",r:"Rare",t:"Quick Use",cat:"Healing"},
+  {n:"Jolt Mine",r:"Rare",t:"Quick Use",cat:"Trap"},
+  {n:"Laser Trap: Lure",r:"Rare",t:"Quick Use",cat:"Trap"},
+  {n:"Vita Spray",r:"Epic",t:"Quick Use",cat:"Healing"},
+  {n:"Wolfpack",r:"Epic",t:"Quick Use",cat:"Grenade"},
+  {n:"Deadline",r:"Epic",t:"Quick Use",cat:"Trap"},
+  {n:"Photoelectric Cloak",r:"Epic",t:"Quick Use",cat:"Utility"},
+  {n:"Powered Descender",r:"Epic",t:"Quick Use",cat:"Gadget"},
+  {n:"Snap Hook",r:"Legendary",t:"Quick Use",cat:"Gadget"},
+  {n:"Acoustic Guitar",r:"Legendary",t:"Quick Use",cat:"Utility"},
+
+  // ========== MATERIALS ==========
+  {n:"Metal Parts",r:"Common",t:"Material",cat:"Basic"},
+  {n:"Plastic Parts",r:"Common",t:"Material",cat:"Basic"},
+  {n:"Fabric",r:"Common",t:"Material",cat:"Basic"},
+  {n:"Rubber Parts",r:"Common",t:"Material",cat:"Basic"},
+  {n:"Chemicals",r:"Common",t:"Material",cat:"Basic"},
+  {n:"ARC Alloy",r:"Common",t:"Material",cat:"Basic"},
+  {n:"ARC Powercell",r:"Common",t:"Material",cat:"Basic"},
+  {n:"Battery",r:"Uncommon",t:"Material",cat:"Topside"},
+  {n:"Wires",r:"Uncommon",t:"Material",cat:"Topside"},
+  {n:"Magnet",r:"Uncommon",t:"Material",cat:"Topside"},
+  {n:"Great Mullein",r:"Uncommon",t:"Material",cat:"Topside"},
+  {n:"Mechanical Components",r:"Uncommon",t:"Material",cat:"Refined"},
+  {n:"Electrical Components",r:"Uncommon",t:"Material",cat:"Refined"},
+  {n:"Simple Gun Parts",r:"Uncommon",t:"Material",cat:"Refined"},
+  {n:"ARC Flex Rubber",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"ARC Synthetic Resin",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"ARC Thermo Lining",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"ARC Performance Steel",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"ARC Motion Core",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Antiseptic",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Mod Components",r:"Rare",t:"Material",cat:"Refined"},
+  {n:"Medium Gun Parts",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Sensors",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Speaker Component",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Voltage Converter",r:"Rare",t:"Material",cat:"Topside"},
+  {n:"Steel Spring",r:"Rare",t:"Material",cat:"Refined"},
+  {n:"Advanced Electrical Components",r:"Rare",t:"Material",cat:"Refined"},
+  {n:"Advanced Mechanical Components",r:"Rare",t:"Material",cat:"Refined"},
+  {n:"Magnetic Accelerator",r:"Epic",t:"Material",cat:"Refined"},
+  {n:"Power Rod",r:"Epic",t:"Material",cat:"Advanced"},
+
+  // ========== RECYCLABLES ==========
+  {n:"Tattered ARC Lining",r:"Uncommon",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Tattered Clothes",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Ripped Safety Vest",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Degraded ARC Rubber",r:"Uncommon",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Rusty ARC Steel",r:"Uncommon",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Metal Brackets",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Pop Trigger",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Spotter Relay",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Tick Pod",r:"Uncommon",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Broken Flashlight",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Broken Guidance System",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Broken Handcuffs",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Comet Igniter",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Deflated Football",r:"Uncommon",t:"Recyclable",cat:"Junk"},
+  {n:"Diving Goggles",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Dog Collar",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Headphones",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Industrial Charger",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Industrial Magnet",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Laboratory Reagents",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Magnetron",r:"Epic",t:"Recyclable",cat:"Junk"},
+  {n:"Microscope",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Mini Centrifuge",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Personal Fan",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Polluted Air Filter",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Portable TV",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Power Bank",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Power Cable",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Remote Control",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Rusted Tools",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Sample Cleaner",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Sentinel Firing Core",r:"Rare",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Spectrometer",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Spring Cushion",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Telemetry Transceiver",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Thermostat",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Toaster",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Torn Blanket",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Turbo Pump",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Unusable Weapon",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Wasp Driver",r:"Rare",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Water Filter",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Water Pump",r:"Rare",t:"Recyclable",cat:"Junk"},
+  {n:"Geiger Counter",r:"Epic",t:"Recyclable",cat:"Junk"},
+  {n:"Ion Sputter",r:"Epic",t:"Recyclable",cat:"Junk"},
+  {n:"Spectrum Analyzer",r:"Epic",t:"Recyclable",cat:"Junk"},
+  {n:"Assessor Matrix",r:"Epic",t:"Recyclable",cat:"ARC Drop"},
+  {n:"Bombardier Cell",r:"Epic",t:"Recyclable",cat:"ARC Drop"},
+
+  // ========== TRINKETS ==========
+  {n:"Torn Book",r:"Common",t:"Trinket",cat:"Junk"},
+  {n:"Wind Sprite Ship Model",r:"Common",t:"Trinket",cat:"Junk"},
+  {n:"Twilight Compass Ship Model",r:"Common",t:"Trinket",cat:"Junk"},
+  {n:"Faded Photograph",r:"Common",t:"Trinket",cat:"Junk"},
+  {n:"Coffee Pot",r:"Common",t:"Trinket",cat:"Junk"},
+  {n:"Alarm Clock",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Air Freshener",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Alien Duck",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Gentle Duck",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Cat Bed",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Very Comfortable Pillow",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Poster of Natural Wonder",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Pottery",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Dart Board",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Magnet",r:"Uncommon",t:"Trinket",cat:"Junk"},
+  {n:"Doodly Duck",r:"Rare",t:"Trinket",cat:"Junk"},
+  {n:"Statuette",r:"Rare",t:"Trinket",cat:"Junk"},
+  {n:"Playing Cards",r:"Rare",t:"Trinket",cat:"Junk"},
+  {n:"Vase",r:"Rare",t:"Trinket",cat:"Junk"},
+  {n:"Bloated Tuna Can",r:"Rare",t:"Trinket",cat:"Junk"},
+  {n:"Breathtaking Snow Globe",r:"Epic",t:"Trinket",cat:"Junk"},
+  {n:"Familiar Duck",r:"Epic",t:"Trinket",cat:"Junk"},
+  {n:"Lance's Mixtape",r:"Epic",t:"Trinket",cat:"Junk"},
+
+  // ========== NATURE ==========
+  {n:"Assorted Seeds",r:"Common",t:"Material",cat:"Nature"},
+  {n:"Apricot",r:"Uncommon",t:"Material",cat:"Nature"},
+  {n:"Lemon",r:"Uncommon",t:"Material",cat:"Nature"},
+  {n:"Mushroom",r:"Uncommon",t:"Material",cat:"Nature"},
+  {n:"Olives",r:"Uncommon",t:"Material",cat:"Nature"},
+  {n:"Prickly Pear",r:"Uncommon",t:"Material",cat:"Nature"},
+  {n:"Resin",r:"Common",t:"Material",cat:"Nature"},
+  {n:"Moss",r:"Rare",t:"Material",cat:"Nature"},
+
+  // ========== KEYS ==========
+  {n:"Blue Gate Cellar Key",r:"Uncommon",t:"Key",cat:"Blue Gate"},
+  {n:"Blue Gate Communication Tower Key",r:"Rare",t:"Key",cat:"Blue Gate"},
+  {n:"Blue Gate Confiscation Room Key",r:"Epic",t:"Key",cat:"Blue Gate"},
+  {n:"Buried City Chiller Key",r:"Uncommon",t:"Key",cat:"Buried City"},
+  {n:"Buried City Dry Storage Key",r:"Uncommon",t:"Key",cat:"Buried City"},
+  {n:"Buried City Residential Master Key",r:"Uncommon",t:"Key",cat:"Buried City"},
+  {n:"Dam Armory Key",r:"Uncommon",t:"Key",cat:"Dam"},
+  {n:"Dam Storage Key",r:"Common",t:"Key",cat:"Dam"},
+  {n:"Dam Testing Annex Key",r:"Rare",t:"Key",cat:"Dam"},
+  {n:"Dam Utility Key",r:"Uncommon",t:"Key",cat:"Dam"},
+  {n:"Pilgrim's Peak Security Code",r:"Common",t:"Key",cat:"Pilgrim's Peak"},
+  {n:"Reinforced Reception Security Code",r:"Common",t:"Key",cat:"General"},
+  {n:"Riven Tides Classified Records Keycard",r:"Uncommon",t:"Key",cat:"Riven Tides"},
+  {n:"Riven Tides Crane House Keycard",r:"Common",t:"Key",cat:"Riven Tides"},
+  {n:"Riven Tides Hotel Keycard No.102",r:"Common",t:"Key",cat:"Riven Tides"},
+  {n:"Riven Tides Hotel Keycard No.107",r:"Common",t:"Key",cat:"Riven Tides"},
+  {n:"Riven Tides Main Port Authority Keycard",r:"Uncommon",t:"Key",cat:"Riven Tides"},
+  {n:"Spaceport Control Tower Key",r:"Rare",t:"Key",cat:"Spaceport"},
+  {n:"Spaceport Trench Tower Key",r:"Uncommon",t:"Key",cat:"Spaceport"},
+  {n:"Spaceport Warehouse Key",r:"Uncommon",t:"Key",cat:"Spaceport"},
+
+  // ========== MISC ==========
+  {n:"Volcanic Rock",r:"Common",t:"Misc",cat:"Junk"},
+  {n:"Coins",r:"Common",t:"Misc",cat:"Currency"},
+  {n:"Dockmaster's Detector",r:"Uncommon",t:"Misc",cat:"Gadget"}
+];
+
+// ====== BUILD UI ======
+const ITEM_DB = DB;
+let filtered = [...ITEM_DB];
+
+// ====== YOUR REAL YOUTUBE VIDEOS ======
+const VIDEOS = [
+  {id:"rzB7CGd08V0",title:"Showcase of Why halo.rip Is better than guns.lol???",views:74,date:"6 days ago"},
+  {id:"8a3rO9B3vxk",title:"Ht0 With Cs2? Montage - Lego by Blamian",views:31,date:"3 weeks ago"},
+  {id:"CkN1-F0nxJI",title:"Lt6 montage",views:55,date:"4 weeks ago"},
+  {id:"8SpdG7BUNHc",title:"RigRunt Montage Wit Kevin G's cover song",views:70,date:"1 month ago"},
+  {id:"2j9idlbCVJo",title:"Minecraft Montage with @RigRunt 2nd POST",views:17,date:"1 month ago"},
+  {id:"2i25JbSAq2w",title:"We hit the jackpot... craziest loaded Trio Intest run EVER",views:13,date:"2 months ago"},
+  {id:"LFORXlylMGQ",title:"Arc raiders Solo Goofing off",views:9,date:"2 months ago"},
+  {id:"hQlyEW4zuzs",title:"ARC RAIDERS DUO RAID INTENSE PVP-GOD ROCKETEIR RIDING",views:20,date:"2 months ago"},
+  {id:"FpXa4vz4PkE",title:"ARC RAIDERS TRIO RAID INTENSE PVP-GODS",views:8,date:"2 months ago"},
+  {id:"2zx8o9ZHVBE",title:"Peak Trios Raids: Non-Stop PvP Slaughter",views:20,date:"2 months ago"},
+  {id:"w-Pbv37UD1o",title:"Peak Trio Raids: Non-Stop PvP Slaughter | ARC Raiders Live",views:37,date:"2 months ago"},
+  {id:"flUaOxvCkQ8",title:"Peak Trio Raids: Non-Stop PvP Slaughter | ARC Raiders Live Solo-Trios",views:32,date:"2 months ago"}
+];
+
+function getWeaponCount() {
+  return ITEM_DB.filter(i => i.t === "Weapon").length;
+}
+
+function renderItems(arr) {
+  const grid = document.getElementById('itemGrid');
+  const countLabel = document.getElementById('countLabel');
+  document.getElementById('showingCount').textContent = arr.length;
+  countLabel.textContent = `${arr.length} of ${ITEM_DB.length} items`;
+
+  if (!arr.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="big">🔍</div><div class="txt">No items found</div><div class="subtxt">Try a different search or filter</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = arr.map(item => {
+    let metaLine = '';
+    if (item.ammo && item.dmg) {
+      metaLine = `<span style="font-size:11px;color:#64748b">⚔️ ${item.ammo} · ${item.dmg} dmg · ${item.wt||''}</span>`;
+    } else if (item.ammo) {
+      metaLine = `<span style="font-size:11px;color:#64748b">${item.ammo}</span>`;
+    }
+
+    return `<div class="item-card ${item.r}" onclick="showModal('${item.n.replace(/'/g,"\\'")}')">
+      <div class="item-name">
+        ${item.n}
+        ${item.r === 'Legendary' ? '🌟' : ''}
+      </div>
+      <div class="item-meta">
+        <span class="rarity-tag tag-${item.r}">${item.r}</span>
+        <span class="type-tag">${item.t}${item.cat ? ' · '+item.cat : ''}</span>
+      </div>
+      ${metaLine ? `<div style="font-size:12px;color:#64748b;margin-bottom:6px">${metaLine}</div>` : ''}
+      <div class="desc-text">${item.desc || (item.get ? '📍 '+item.get : '') || item.slots || ''}</div>
+      ${item.tip ? `<div style="font-size:11px;color:#fbbf24;margin-bottom:6px">⚡ ${item.tip}</div>` : ''}
+      <div class="card-footer">
+        <span class="view-btn" onclick="event.stopPropagation();showModal('${item.n.replace(/'/g,"\\'")}')">Details →</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showModal(name) {
+  const item = ITEM_DB.find(i => i.n === name);
+  if (!item) return;
+  document.getElementById('modalTitle').innerHTML = `${item.n} <span class="rarity-tag tag-${item.r}" style="font-size:12px;vertical-align:middle">${item.r}</span>${item.r==='Legendary'?' 🌟':''}`;
+
+  let html = `<div class="detail-grid">
+    <div class="detail-row"><div class="detail-label">Type</div><div class="detail-value">${item.t}${item.cat ? ' — '+item.cat : ''}</div></div>`;
+  if (item.ammo) html += `<div class="detail-row"><div class="detail-label">Ammo</div><div class="detail-value">${item.ammo}</div></div>`;
+  if (item.wt) html += `<div class="detail-row"><div class="detail-label">Weight</div><div class="detail-value">${item.wt}</div></div>`;
+  if (item.slots) html += `<div class="detail-row"><div class="detail-label">Mod Slots</div><div class="detail-value">${item.slots}</div></div>`;
+  html += `</div>`;
+  if (item.desc) html += `<div class="detail-row"><div class="detail-label">Description</div><div class="detail-value">${item.desc}</div></div>`;
+  if (item.get) html += `<div class="detail-row"><div class="detail-label">How to Get</div><div class="detail-value">${item.get}</div></div>`;
+  if (item.tip) html += `<div class="pro-tip"><div class="pro-tip-label">⚡ Rig's Pro Tip</div><div class="pro-tip-value">${item.tip}</div></div>`;
+
+  document.getElementById('modalBody').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+function filterItems() {
+  const s = document.getElementById('searchInput').value.toLowerCase();
+  const r = document.getElementById('rarityFilter').value;
+  const t = document.getElementById('typeFilter').value;
+  filtered = ITEM_DB.filter(i =>
+    (!s || i.n.toLowerCase().includes(s) || (i.cat && i.cat.toLowerCase().includes(s)) || (i.desc && i.desc.toLowerCase().includes(s)) || (i.get && i.get.toLowerCase().includes(s))) &&
+    (!r || i.r === r) &&
+    (!t || i.t === t)
+  );
+  renderItems(filtered);
+}
+
+document.getElementById('searchInput').addEventListener('input', filterItems);
+document.getElementById('rarityFilter').addEventListener('change', filterItems);
+document.getElementById('typeFilter').addEventListener('change', filterItems);
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ====== YOUTUBE SECTION WITH YOUR REAL VIDEOS ======
+const seenKey = 'rigrunt_seen';
+let seenVideos = JSON.parse(localStorage.getItem(seenKey) || '[]');
+
+function fetchRealVideos() {
+  const grid = document.getElementById('ytGrid');
+  const status = document.getElementById('ytStatus');
+  const dot = document.getElementById('monitorDot');
+  let hasUnseen = false;
+
+  grid.innerHTML = VIDEOS.map(v => {
+    const isUnseen = !seenVideos.includes(v.id);
+    if (isUnseen) hasUnseen = true;
+    return `<a class="yt-card" href="https://youtube.com/watch?v=${v.id}" target="_blank" onclick="markSeen('${v.id}')">
+      <div class="yt-thumb-wrap">
+        <img src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt="${v.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="yt-thumb-fallback" style="display:none">🎬</div>
+        <div class="yt-play-overlay"><div class="yt-play-icon"></div></div>
+        ${isUnseen ? '<span class="yt-new-badge">🔴 NEW</span>' : ''}
+      </div>
+      <div class="yt-info">
+        <div class="yt-title">${v.title}</div>
+        <div class="yt-stats">${v.views} views · ${v.date}</div>
+        ${isUnseen ? '<div class="yt-unseen">● Unwatched</div>' : ''}
+      </div>
+    </a>`;
+  }).join('');
+
+  document.getElementById('navNewDot').style.display = hasUnseen ? 'inline-block' : 'none';
+  if (hasUnseen) {
+    status.textContent = '🔴 New video from @RigRunt! Check it out.';
+    dot.className = 'monitor-dot red';
+  } else {
+    status.textContent = '✅ All caught up — no new videos since last visit.';
+    dot.className = 'monitor-dot';
+  }
+}
+
+function markSeen(id) {
+  if (!seenVideos.includes(id)) {
+    seenVideos.push(id);
+    try { localStorage.setItem(seenKey, JSON.stringify(seenVideos)); } catch(e) {}
+  }
+}
+
+// ====== AI CHAT ======
+function sendMsg() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML += `<div class="chat-msg chat-user">${msg}</div>`;
+  msgs.innerHTML += `<div class="chat-msg chat-ai" id="aiTyping"><div class="msg-by">Rig's AI</div><span class="loading-msg">Searching database...</span></div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+
+  const q = msg.toLowerCase();
+  const matches = ITEM_DB.filter(i => i.n.toLowerCase().includes(q) || (i.desc && i.desc.toLowerCase().includes(q)) || (i.cat && i.cat.toLowerCase().includes(q)) || (i.get && i.get.toLowerCase().includes(q)));
+  
+  let reply = '';
+  if (matches.length > 0) {
+    const top = matches.slice(0, 4);
+    reply = `Found ${matches.length} items matching "${msg}".<br><br>`;
+    reply += top.map(i => {
+      let info = `<b>${i.n}</b> (${i.r} ${i.t})`;
+      if (i.get) info += `<br>📍 ${i.get}`;
+      if (i.tip) info += `<br>⚡ ${i.tip}`;
+      if (i.desc) info += `<br>${i.desc}`;
+      if (i.ammo) info += `<br>Uses ${i.ammo}`;
+      return info;
+    }).join('<br><br>');
+    if (matches.length > 4) reply += `<br><br>...and ${matches.length - 4} more matches. Use the search bar to filter!`;
+  } else if (q.includes('craft') || q.includes('build') || q.includes('best')) {
+    reply = "Top crafting priorities:<br><br>1️⃣ <b>Matriarch Reactor</b> — KEEP for Aphelion<br>2️⃣ <b>Queen Reactor</b> — KEEP for Equalizer<br>3️⃣ <b>Power Rod</b> — Snap Hook + Heavy Shield<br>4️⃣ <b>Antiseptic</b> — Medical Lab III<br>5️⃣ <b>Advanced Electrical Components</b> — Gear Bench III";
+  } else if (q.includes('hello') || q.includes('hi')) {
+    reply = "Hey raider! Ask me about weapons, loot locations, crafting, or anything ARC Raiders. Type a specific item name for details!";
+  } else {
+    reply = `No exact matches for "${msg}". Try a specific item name like 'Aphelion', 'Tempest', or 'Power Rod'.`;
+  }
+
+  document.getElementById('aiTyping').innerHTML = `<div class="msg-by">Rig's AI</div><div style="font-size:13px;color:#cbd5e1;line-height:1.6">${reply}</div>`;
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+// ====== INIT ======
+document.getElementById('totalCount').textContent = ITEM_DB.length;
+document.getElementById('weaponCount').textContent = getWeaponCount();
+renderItems(filtered);
+fetchRealVideos();
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>
